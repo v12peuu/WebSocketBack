@@ -16,7 +16,8 @@ app.post('/api/auth/login', usersController.login);
 app.get('/api/users/me', authenticate, usersController.getUser);
 app.get('/api/users', authenticate, usersController.findAll);
 app.post('/api/messages/send', authenticate, usersController.sendMessage);
-app.get('/api/messages/history/:userId', authenticate, usersController.getMessageHistory);
+app.get('/api/messages/history', authenticate, usersController.getConversationHistory);
+
 
 
 const server = http.createServer(app);

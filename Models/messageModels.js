@@ -36,21 +36,19 @@ const getMessages = async (username) => {
 // Função para obter o histórico de mensagens entre dois usuários
 const getMessageHistory = async (userId1, userId2) => {
     try {
-        if (!userId1 || !userId2) throw new Error('IDs de usuários inválidos.');
-
         const result = await pool.query(
-            `SELECT id, sender, recipient, content, created_at
-             FROM messages 
+            `SELECT * FROM messages 
              WHERE (sender = $1 AND recipient = $2) OR (sender = $2 AND recipient = $1) 
              ORDER BY created_at ASC`,
             [userId1, userId2]
         );
-        return result.rows;
+        return result.rows; // Retorna todas as mensagens entre os dois usuários
     } catch (error) {
         console.error('Erro ao recuperar histórico de mensagens:', error);
         throw new Error('Erro ao recuperar histórico de mensagens.');
     }
 };
+
 
 module.exports = {
     sendMessage,

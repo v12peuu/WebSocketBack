@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const messageModel = require('../Models/messageModels');
 const { validateUsername, validatePassword, validateMessage } = require('../validators');
 const rateLimit = require('express-rate-limit'); // Exemplo de rate limiting
+const { map } = require('../app');
 
 
 
@@ -114,6 +115,12 @@ exports.getUser = async (req, res) => {
 exports.findAll = async (req, res) => {
     try {
         const users = await pool.query('SELECT * FROM users');
+        users.rows.map(user => {
+            delete user.password;
+            delete user.created_at;
+
+        })
+    
         res.json({ success: true, data: users.rows });
     } catch (error) {
         console.error(error);
@@ -192,19 +199,24 @@ exports.registerWebSocket = (ws, token) => {
 };
 
 // Buscar histórico de mensagens
-exports.getMessageHistory = async (req, res) => {
-    const { userId } = req.params;
-    const loggedUserId = req.user.id;
+exports.getConversationHistory = async (req, res) => {
+    const { senderId, recipientId } = req.query; // Recebe os IDs via query
+    const loggedUserId = req.user.id; // ID do usuário logado
 
     try {
-        if (loggedUserId !== parseInt(userId, 10)) {
+        // Verifica se o usuário logado é um dos participantes da conversa
+        if ( !loggedUserId || (loggedUserId !== parseInt(senderId, 10) && loggedUserId !== parseInt(recipientId, 10))) {
             return res.status(403).json({ success: false, message: 'Acesso negado.' });
         }
 
-        const messages = await messageModel.getMessageHistory(loggedUserId, userId);
+        // Chama o modelo para obter o histórico de mensagens
+        const messages = await messageModel.getMessageHistory(senderId, recipientId);
         res.json({ success: true, data: messages });
     } catch (error) {
-        console.error(error);
+        console.error('Erro ao buscar histórico de mensagens:', error);
         res.status(500).json({ success: false, message: 'Erro ao buscar o histórico de mensagens.' });
     }
 };
+
+
+
